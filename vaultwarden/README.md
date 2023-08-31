@@ -30,6 +30,18 @@ dokku storage:mount "$DOKKU_APP" "/var/lib/dokku/data/storage/$DOKKU_APP:/data"
 dokku git:from-image "$DOKKU_APP" $DOCKER_IMAGE
 ```
 
+# Backups
+
+```
+mkdir -p /var/backups/dokku/vaultwarden
+```
+
+Add to root crontab
+
+```
+0 3 * * * sqlite3 /var/lib/dokku/data/storage/vaultwarden/db.sqlite3 ".backup '/var/backups/dokku/vaultwarden/db-$(date '+\%Y\%m\%d-\%H\%M').sqlite3'"
+```
+
 # Restore Database
 
 N.B. This assumes an SQLite database.
