@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -o errtrace
+
+function dokku (
+  ssh -t dokku@$DOKKU_HOST "$@" 2>&1 | grep -v "Connection to $DOKKU_HOST closed."
+)
+
+for d in config data logs plugins client/plugins bleve-indexes; do
+  dokku storage:ensure-directory $DOKKU_APP --chown packeto $d || echo "OK, exists"
+  volume="/var/lib/dokku/data/storage/$DOKKU_APP/$d"
+  dokku storage:mount $DOKKU_APP "$volume:/mattermost/$d"
+done 
