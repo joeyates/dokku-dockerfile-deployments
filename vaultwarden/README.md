@@ -12,7 +12,7 @@ dokku apps:create "$DOKKU_APP"
 dokku domains:set "$DOKKU_APP" $APP_DOMAIN
 
 # Configure certificate
-dokku config:set --no-restart "$DOKKU_APP" DOKKU_LETSENCRYPT_EMAIL=$DOMAIN_EMAIL
+dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
 dokku config:set --no-restart "$DOKKU_APP" DOKKU_LETSENCRYPT_SERVER=staging
 dokku letsencrypt:enable "$DOKKU_APP"
 dokku config:unset --no-restart "$DOKKU_APP" DOKKU_LETSENCRYPT_SERVER
@@ -30,18 +30,42 @@ dokku storage:mount "$DOKKU_APP" "/var/lib/dokku/data/storage/$DOKKU_APP:/data"
 dokku git:from-image "$DOKKU_APP" $DOCKER_IMAGE
 ```
 
+# Restore Database
+
+N.B. This assumes an SQLite database.
+
+```
+dokku ps:stop "$DOKKU_APP"
+```
+
+Copy the backup to `"/var/lib/dokku/data/storage/$DOKKU_APP"`
+
+```
+dokku ps:start "$DOKKU_APP"
+```
+
 # SMTP
 
-SMTP can be configured with these environment variables:
+SMTP can be configured with these environment variables in `.envrc.private`:
 
+```
+SMTP_HOST=<smtp host>
+SMTP_FROM=<admin email>
+SMTP_PORT=587|465
+SMTP_SECURITY=starttls|force_tls|none
+SMTP_USERNAME=<username>
+SMTP_PASSWORD=<password>
+```
 
-* SMTP_HOST=<smtp host>
-* SMTP_FROM=<admin email>
-* SMTP_PORT=587|465
-* SMTP_SECURITY=starttls|force_tls|none
-* SMTP_USERNAME=<username>
-* SMTP_PASSWORD=<password>
+```
+dokku config:set $DOKKU_APP --no-restart SMTP_HOST=$SMTP_HOST SMTP_FROM=$SMTP_FROM SMTP_PORT=$SMTP_PORT SMTP_SECURITY=$SMTP_SECURITY SMTP_USERNAME=$SMTP_USERNAME SMTP_PASSWORD=$SMTP_PASSWORD
+```
+
 
 # Admin
 
 Available under /admin
+
+## Configuration Via Admin
+
+Set the "Domain URL"
