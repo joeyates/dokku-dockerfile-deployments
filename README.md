@@ -1,3 +1,14 @@
+# Overview
+
+The command
+
+```
+dokku git:from-image $DOKKU_APP $DOCKER_IMAGE
+```
+
+initializes a Git repo, adding a Dockerfile
+with a reference to the Docker image.
+
 # Domain
 
 Choose and set up the domain name on nameserver.
