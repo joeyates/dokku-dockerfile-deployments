@@ -9,6 +9,16 @@ dokku git:from-image $DOKKU_APP $DOCKER_IMAGE
 initializes a Git repo, adding a Dockerfile
 with a reference to the Docker image.
 
+# Modifications
+
+If, after deployment, you want to modify anything,
+you can proceed by working on the Git repo,
+like with any other Dokku Dockerfile deployment.
+
+```
+git clone --origin dokku dokku@$DOKKU_HOST:$DOKKU_APP
+```
+
 # Domain
 
 Choose and set up the domain name on nameserver.
