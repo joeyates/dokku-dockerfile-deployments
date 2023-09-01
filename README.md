@@ -7,11 +7,13 @@ Check that the domain resolves.
 # Set up the environment
 
 ```sh
-export DOCKER_IMAGE=XXXXX"
-export DOKKU_APP=XXXXX"
-export DOMAIN_EMAIL=XXXXX"
-export APP_DOMAIN=XXXXX"
+export DOCKER_IMAGE=XXXXX
+export DOKKU_APP=XXXXX
+export DOMAIN_EMAIL=XXXXX
+export APP_DOMAIN=XXXXX
 ```
+
+# TLS Certificate
 
 Create the app and set up the TLS certificate
 
