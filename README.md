@@ -1,4 +1,10 @@
-Set up the environment
+# Domain
+
+Choose and set up the domain name on nameserver.
+
+Check that the domain resolves.
+
+# Set up the environment
 
 ```sh
 export DOCKER_IMAGE=XXXXX"
