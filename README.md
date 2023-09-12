@@ -34,7 +34,7 @@ export DOMAIN_EMAIL=XXXXX
 export APP_DOMAIN=XXXXX
 ```
 
-# TLS Certificate
+# App + TLS Certificate
 
 Create the app and set up the TLS certificate
 
@@ -59,12 +59,16 @@ dokku config:unset --no-restart $DOKKU_APP DOKKU_LETSENCRYPT_SERVER
 dokku letsencrypt:enable $DOKKU_APP
 ```
 
+# Storage
+
 Optionally, set up storage
 
 ```sh
 dokku storage:ensure-directory "$DOKKU_APP"
 dokku storage:mount "$DOKKU_APP" "/var/lib/dokku/data/storage/$DOKKU_APP:/PATH/IN/CONTAINER"
 ```
+
+# Deploy
 
 Deploy the image
 
