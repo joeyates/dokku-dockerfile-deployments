@@ -3,7 +3,7 @@
 set -o errtrace
 
 function dokku (
-  ssh -t dokku@$DOKKU_HOST "$@" 2>&1 | grep -v "Connection to $DOKKU_HOST closed."
+  ssh -t dokku@$DOKKU_HOST "$@"
 )
 
 for d in config data logs plugins client/plugins bleve-indexes; do
