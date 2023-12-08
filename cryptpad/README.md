@@ -23,4 +23,6 @@ docker run \
   cryptpad/cryptpad:version-5.5.0
 ```
 
+The site will be available at `http://127.0.0.1:3000/`
+
 
