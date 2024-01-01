@@ -51,6 +51,9 @@ dokku letsencrypt:set $DOKKU_APP server staging
 dokku config:set --no-restart $DOKKU_APP DOKKU_LETSENCRYPT_SERVER=staging
 
 dokku letsencrypt:enable $DOKKU_APP
+# N.B. - This may hang.
+#   As long as you see the message `Validations succeeded`, it's OK.
+#   You can then interrupt it with Ctrl+C
 
 dokku letsencrypt:set $DOKKU_APP server
 # or, old:
