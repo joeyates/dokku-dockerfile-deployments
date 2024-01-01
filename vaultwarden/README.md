@@ -13,9 +13,9 @@ dokku domains:set "$DOKKU_APP" $APP_DOMAIN
 
 # Configure certificate
 dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
-dokku config:set --no-restart "$DOKKU_APP" DOKKU_LETSENCRYPT_SERVER=staging
+dokku letsencrypt:set $DOKKU_APP server staging
 dokku letsencrypt:enable "$DOKKU_APP"
-dokku config:unset --no-restart "$DOKKU_APP" DOKKU_LETSENCRYPT_SERVER
+dokku letsencrypt:set $DOKKU_APP server
 dokku letsencrypt:enable "$DOKKU_APP"
 
 dokku proxy:ports-set "$DOKKU_APP" https:443:80
