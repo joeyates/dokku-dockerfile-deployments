@@ -7,7 +7,7 @@ Uses SQLite DB in a host volume
 Set up DNS for domain
 Create and edit .envrc.private, based on .envrc
 
-```
+```sh
 dokku apps:create "$DOKKU_APP"
 dokku domains:set "$DOKKU_APP" $APP_DOMAIN
 
@@ -32,13 +32,13 @@ dokku git:from-image "$DOKKU_APP" $DOCKER_IMAGE
 
 # Backups
 
-```
+```sh
 mkdir -p /var/backups/dokku/vaultwarden
 ```
 
 Add to root crontab
 
-```
+```crontab
 0 3 * * * sqlite3 /var/lib/dokku/data/storage/vaultwarden/db.sqlite3 ".backup '/var/backups/dokku/vaultwarden/db-$(date '+\%Y\%m\%d-\%H\%M').sqlite3'"
 ```
 
@@ -46,7 +46,7 @@ Add to root crontab
 
 N.B. This assumes an SQLite database.
 
-```
+```sh
 dokku ps:stop "$DOKKU_APP"
 ```
 
@@ -60,7 +60,7 @@ dokku ps:start "$DOKKU_APP"
 
 SMTP can be configured with these environment variables in `.envrc.private`:
 
-```
+```sh
 SMTP_HOST=<smtp host>
 SMTP_FROM=<admin email>
 SMTP_PORT=587|465
@@ -69,7 +69,7 @@ SMTP_USERNAME=<username>
 SMTP_PASSWORD=<password>
 ```
 
-```
+```sh
 dokku config:set $DOKKU_APP --no-restart SMTP_HOST=$SMTP_HOST SMTP_FROM=$SMTP_FROM SMTP_PORT=$SMTP_PORT SMTP_SECURITY=$SMTP_SECURITY SMTP_USERNAME=$SMTP_USERNAME SMTP_PASSWORD=$SMTP_PASSWORD
 ```
 

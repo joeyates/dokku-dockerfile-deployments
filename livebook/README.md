@@ -22,7 +22,7 @@ dokku storage:mount "$DOKKU_APP" "/var/lib/dokku/data/storage/$DOKKU_APP:/data"
 
 # Ports
 
-```
+```sh
 dokku proxy:ports-set $DOKKU_APP http:80:8080 https:443:8080
 ```
 

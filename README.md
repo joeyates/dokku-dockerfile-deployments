@@ -2,7 +2,7 @@
 
 The command
 
-```
+```sh
 dokku git:from-image $DOKKU_APP $DOCKER_IMAGE
 ```
 
@@ -15,7 +15,7 @@ If, after deployment, you want to modify anything,
 you can proceed by working on the Git repo,
 like with any other Dokku Dockerfile deployment.
 
-```
+```sh
 git clone --origin dokku dokku@$DOKKU_HOST:$DOKKU_APP
 ```
 
