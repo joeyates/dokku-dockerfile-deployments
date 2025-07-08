@@ -37,6 +37,10 @@
   - add `/local:///` to the URL to specify the source
   - URL encode the path to the image
 
+* Signed URLs
+
+  - set `IMGPROXY_KEY` and `IMGPROXY_SALT` to enable signed URLs
+
 * Run Locally
 
   @code sh
