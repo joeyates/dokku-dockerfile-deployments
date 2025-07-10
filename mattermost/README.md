@@ -32,11 +32,6 @@ Edit config/config.json
 * Set SiteURL
 * Set SMTP
 
-```
-mail.infomaniak.com
-port: 465
-```
-
 Enable Push Proxy:
 
 System Console > Environment > Push Notification Server > Enable Push Notifications
