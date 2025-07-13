@@ -26,4 +26,6 @@ dokku redis:link nextcloud $DOKKU_APP
 
 ```sh
 dokku config:set $DOKKU_APP --no-restart PHP_MEMORY_LIMIT=4G PHP_UPLOAD_LIMIT=3G
+dokku nginx:set $DOKKU_APP client-max-body-size 3g
+dokku ps:rebuild $DOKKU_APP
 ```
