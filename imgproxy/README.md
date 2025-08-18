@@ -30,14 +30,6 @@ dokku letsencrypt:set $DOKKU_APP server
 dokku letsencrypt:enable $DOKKU_APP
 ```
 
-# Serving From The Local File System
-
-* set `IMGPROXY_LOCAL_FILESYSTEM_ROOT` to the path where the images are stored
-* add `/insecure/` to the URL to disable the signature check
-* add `/plain/` to the URL to disable the format check
-* add `/local:///` to the URL to specify the source
-* URL encode the path to the image
-
 # Signed URLs
 
 * set `IMGPROXY_KEY` and `IMGPROXY_SALT` to enable signed URLs
@@ -46,15 +38,27 @@ dokku letsencrypt:enable $DOKKU_APP
 export IMGPROXY_KEY=$(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
 export IMGPROXY_SALT=$(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
 dokku config:set --no-restart $DOKKU_APP \
-IMGPROXY_KEY=$IMGPROXY_KEY \
-IMGPROXY_SALT=$IMGPROXY_SALT
+  IMGPROXY_KEY=$IMGPROXY_KEY \
+  IMGPROXY_SALT=$IMGPROXY_SALT
 ```
 
 # Run Locally
 
+* set `HOST_FILESYSTEM_ROOT` to the *host* path where the images are stored
+* add `/plain/` to the URL to disable the format check
+* add `/local:///` to the URL to specify the source
+* URL encode the path to the image
+
 ```sh
-podman pull docker.io/darthsim/imgproxy:latest
-podman run --env IMGPROXY_LOCAL_FILESYSTEM_ROOT=/CONTAINER/PATH --volume /HOST/PATH:/CONTAINER/PATH --publish 8080:8080 -it darthsim/imgproxy:latest
+podman pull $CONTAINER
+podman run \
+  --env IMGPROXY_LOCAL_FILESYSTEM_ROOT=$IMGPROXY_LOCAL_FILESYSTEM_ROOT \
+  --env IMGPROXY_KEY=$IMGPROXY_KEY \
+  --env IMGPROXY_SALT=$IMGPROXY_SALT \
+  --volume $HOST_FILESYSTEM_ROOT:$IMGPROXY_LOCAL_FILESYSTEM_ROOT \
+  --publish 8080:8080 \
+  -it \
+  $CONTAINER
 
 curl -O 'http://localhost:8080/insecure/plain/local:///SOME%20IMAGE.jpg'
 ```
