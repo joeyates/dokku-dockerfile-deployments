@@ -1,0 +1,144 @@
+# This file provides the following direnv extensions:
+# * ensure_all_documented
+# * ensure_all_set
+# It assumes .envrc lists all environment variables *required* by a project,
+# by exporting them set equal to an empty string:
+#     export MYVAR=
+# or, to the default value:
+#     export MYVAR=some-default
+# .envrc.private (which should be excluded from source control) supplies the values
+# for required variables.
+
+# Usage:
+# 1. In `.envrc`, document all exports:
+#
+#     # MYVAR: a value I want to set
+#     export MYVAR=
+#     # OTHERVAR: (optional) a value I might want to set
+#     export OTHERVAR=
+#
+#     source_env .envrc.private
+#
+# 2. In `.envrc.private`, set all required values:
+#
+#     export MYVAR=foo
+#
+# 3. At the end of `.envrc`, source this file:
+#
+#     source_env .config/direnvrc
+
+__direnv_print_error() (
+  local RED="\e[1;31m"
+  local DEFAULT="\e[0m"
+  echo -e "${RED}$1${DEFAULT}"
+)
+
+__direnv_store_exports() {
+  declare -n __store_name="$1"
+  IFS=$'\n'
+  local var
+
+  for var in $(printenv); do
+    # Split the variable into name and value
+    local name="${var%%=*}"
+    local value="${var#*=}"
+
+    if [[ "$name" == "_" ]]; then
+      # Skip the underscore variable, which is set by printenv
+      continue
+    fi
+
+    __store_name["${name}"]="${value}"
+  done
+}
+
+declare -gA existing_exports
+
+# To be called at the start of .envrc
+# to store pre-existing exports.
+save_defined() {
+  __direnv_store_exports existing_exports
+  declare -r existing_exports
+}
+
+envrc_exports() (
+  # Find lines with exports of environment variables,
+  # collect the names of the environment variables.
+  # To get exported environment variables as an array
+  # do this:
+  #     local exports=($(envrc_exports))
+  grep -Po '(?<=^export )[A-Z0-9_]+(?==)' .envrc
+)
+
+# Fail if there are any existing exports
+# introduced by sourcing other files
+# that are not documented in .envrc
+block_additions() {
+  declare -A direnv_exports=([DIRENV_WATCHES]=1)
+  declare -A current_exports
+  __direnv_store_exports current_exports
+  local allowed=($(envrc_exports))
+  declare -A allowed_exports
+
+  for export in "${allowed[@]}"; do
+    allowed_exports["$export"]=1
+  done
+
+  for key in ${!current_exports[@]}; do
+    if [ "${direnv_exports[$key]+ok}" ]; then
+      # Export is a direnv export
+      continue
+    fi
+
+    if [ "${existing_exports[$key]+ok}" ]; then
+      # Export was defined before loading .envrc
+      if [ "${current_exports[$key]}" = "${existing_exports[$key]}" ]; then
+        # The value is unchanged, so we can skip it
+        continue
+      fi
+
+      echo "Export $key's value was changed during loading .envrc"
+      exit 1
+    fi
+
+    if [ "${allowed_exports[$key]+ok}" ]; then
+      # Export is declared by .envrc
+      continue
+    fi
+
+    echo "Export '$key' is unknown. It was added by a sourced file, but is not declared in .envrc."
+    exit 1
+  done
+}
+
+# Ensure that all exports from .envrc are documented,
+# unless they are marked as (optional).
+# A comment should be as follows:
+# '# VARIABLE: documentation'
+ensure_all_documented() (
+  local exports=($(envrc_exports))
+
+  for (( i=0; i<${#exports[@]}; i++ ))
+  do
+    local export=${exports[$i]}
+    grep -P "^# $export:" .envrc >/dev/null || __direnv_print_error "direnv: export $export does not have a comment"
+  done
+)
+
+ensure_all_set() (
+  local exports=($(envrc_exports))
+
+  for (( i=0; i<${#exports[@]}; i++ ))
+  do
+    local export=${exports[$i]}
+
+    # Skip optional exports
+    if grep -P "^# $export: \(optional\)" .envrc >/dev/null; then
+      continue
+    fi
+
+    if [ -z ${!export} ]; then
+      __direnv_print_error "direnv: export $export is unset. Either set it in .envrc.private or mark it as optional by adding a comment '# $export: (optional) ...'"
+    fi
+  done
+)
