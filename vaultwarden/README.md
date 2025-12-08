@@ -27,6 +27,7 @@ dokku letsencrypt:enable "$DOKKU_APP"
 
 ```sh
 mkdir -p /var/backups/dokku/vaultwarden
+chmod 0700 /var/backups/dokku/vaultwarden
 ```
 
 Add to root crontab
