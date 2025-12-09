@@ -7,20 +7,21 @@
 * Create and edit .envrc.private, based on .envrc
 
 ```sh
-dokku apps:create "$DOKKU_APP"
-dokku domains:set "$DOKKU_APP" $APP_DOMAIN
+dokku apps:create $DOKKU_APP
+dokku domains:set $DOKKU_APP $APP_DOMAIN
 
 dokku config:set --no-restart $DOKKU_APP \
-IMGPROXY_LOCAL_FILESYSTEM_ROOT=$DOKKU_IMGPROXY_LOCAL_FILESYSTEM_ROOT
+  IMGPROXY_LOCAL_FILESYSTEM_ROOT=$DOKKU_IMGPROXY_LOCAL_FILESYSTEM_ROOT
 
 # If DOKKU_IMGPROXY_PATH_PREFIX is required:
 dokku config:set --no-restart $DOKKU_APP \
-IMGPROXY_PATH_PREFIX=$DOKKU_IMGPROXY_PATH_PREFIX
+  IMGPROXY_PATH_PREFIX=$DOKKU_IMGPROXY_PATH_PREFIX
 
 dokku storage:mount $DOKKU_APP "$REMOTE_HOST_FILESYSTEM_ROOT:$DOKKU_IMGPROXY_LOCAL_FILESYSTEM_ROOT"
 dokku git:from-image $DOKKU_APP $CONTAINER
 
 # Configure certificate
+dokku ports:set $DOKKU_APP http:80:8080
 dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
 # To avoid getting rate limited, use staging first
 dokku letsencrypt:set $DOKKU_APP server staging
