@@ -23,6 +23,28 @@ dokku letsencrypt:set $DOKKU_APP server
 dokku letsencrypt:enable "$DOKKU_APP"
 ```
 
+# Setup
+
+Generate an ADMIN_TOKEN, based on a secure random value.
+
+First generate a random password (which should be stored securely):
+
+```sh
+pwgen 64 1
+```
+
+Then generate the hash:
+
+```sh
+podman run --rm -it vaultwarden/server /vaultwarden hash --preset owasp
+```
+
+Set the ADMIN_TOKEN environment variable in Dokku:
+
+```sh
+dokku config:set ADMIN_TOKEN='$argon2id...' $DOKKU_APP
+```
+
 # Backups
 
 ```sh
