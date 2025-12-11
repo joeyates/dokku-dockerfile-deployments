@@ -36,8 +36,8 @@ dokku letsencrypt:enable $DOKKU_APP
 * set `IMGPROXY_KEY` and `IMGPROXY_SALT` to enable signed URLs
 
 ```sh
-export IMGPROXY_KEY=$(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
-export IMGPROXY_SALT=$(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
+export IMGPROXY_KEY=$(xxd -g 2 -l 32 -p /dev/random | tr -d '\n')
+export IMGPROXY_SALT=$(xxd -g 2 -l 32 -p /dev/random | tr -d '\n')
 dokku config:set --no-restart $DOKKU_APP \
   IMGPROXY_KEY=$IMGPROXY_KEY \
   IMGPROXY_SALT=$IMGPROXY_SALT
