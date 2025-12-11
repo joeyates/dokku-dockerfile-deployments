@@ -1,6 +1,8 @@
 # This file provides the following direnv extensions:
 # * ensure_all_documented
 # * ensure_all_set
+# * save_defined
+# * fail_on_unknown
 # It assumes .envrc lists all environment variables *required* by a project,
 # by exporting them set equal to an empty string:
 #     export MYVAR=
@@ -10,22 +12,37 @@
 # for required variables.
 
 # Usage:
-# 1. In `.envrc`, document all exports:
 #
-#     # MYVAR: a value I want to set
-#     export MYVAR=
-#     # OTHERVAR: (optional) a value I might want to set
-#     export OTHERVAR=
+# 1. In your .envrc, at the top, call save_defined and ensure_all_documented:
 #
-#     source_env .envrc.private
+#    source_env .config/direnvrc
+#    ensure_all_documented
+#    save_defined
 #
-# 2. In `.envrc.private`, set all required values:
+# This will ensure that all exports are documented in comments,
+# and saves a list of pre-existing exports to compare against later.
 #
-#     export MYVAR=foo
+# 2. In `.envrc`, document all exports:
 #
-# 3. At the end of `.envrc`, source this file:
+#    # MYVAR: a value I want to set
+#    export MYVAR=
+#    # OTHERVAR: (optional) a value I might want to set
+#    export OTHERVAR=
 #
-#     source_env .config/direnvrc
+# 3. Source `.envrc.private` (which is not checked into source control), and
+#    call fail_on_unknown and ensure_all_set:
+#
+#    source_env .envrc.private
+#    fail_on_unknown
+#    ensure_all_set
+#
+# This will fail if .envrc.private is missing.
+# It then ensure_all_set no unknown exports were introduced by sourcing `.envrc.private`.
+# It then ensures that all required exports are set.
+#
+# 3. Finally, in `.envrc.private`, set all required values, and any optional ones you want:
+#
+#    export MYVAR=foo
 
 __direnv_print_error() (
   local RED="\e[1;31m"
@@ -52,15 +69,6 @@ __direnv_store_exports() {
   done
 }
 
-declare -gA existing_exports
-
-# To be called at the start of .envrc
-# to store pre-existing exports.
-save_defined() {
-  __direnv_store_exports existing_exports
-  declare -r existing_exports
-}
-
 envrc_exports() (
   # Find lines with exports of environment variables,
   # collect the names of the environment variables.
@@ -70,10 +78,19 @@ envrc_exports() (
   grep -Po '(?<=^export )[A-Z0-9_]+(?==)' .envrc
 )
 
-# Fail if there are any existing exports
+declare -gA existing_exports
+
+# To be called at the start of .envrc
+# to store pre-existing exports.
+save_defined() {
+  __direnv_store_exports existing_exports
+  declare -r existing_exports
+}
+
+# Fail if there are any exports
 # introduced by sourcing other files
 # that are not documented in .envrc
-block_additions() {
+fail_on_unknown() {
   declare -A direnv_exports=([DIRENV_WATCHES]=1)
   declare -A current_exports
   __direnv_store_exports current_exports
