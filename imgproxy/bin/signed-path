@@ -2,8 +2,9 @@
 
 const key = process.env.IMGPROXY_KEY
 const salt = process.env.IMGPROXY_SALT
-const baseURL = process.env.IMGPROXY_LOCAL_BASE_URL
-const path = process.argv[2]
+const baseURL = process.argv[2]
+// path should be '/plain/local:///IMAGE_NAME.EXT'
+const path = process.argv[3]
 
 const createHmac = require('crypto').createHmac
 
