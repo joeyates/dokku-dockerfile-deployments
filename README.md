@@ -14,7 +14,7 @@ Check that the domain resolves.
 # Set up the environment
 
 ```sh
-export DOCKER_IMAGE=XXXXX
+export CONTAINER=XXXXX
 export DOKKU_APP=XXXXX
 export DOMAIN_EMAIL=XXXXX
 export APP_DOMAIN=XXXXX
@@ -43,7 +43,7 @@ dokku storage:mount $DOKKU_APP "/var/lib/dokku/data/storage/$DOKKU_APP:/PATH/IN/
 Deploy the image
 
 ```sh
-dokku git:from-image $DOKKU_APP $DOCKER_IMAGE
+dokku git:from-image $DOKKU_APP $CONTAINER
 ```
 
 # TLS Certificate
@@ -60,6 +60,15 @@ dokku letsencrypt:enable $DOKKU_APP
 #   You can then interrupt it with Ctrl+C
 dokku letsencrypt:set $DOKKU_APP server
 dokku letsencrypt:enable $DOKKU_APP
+```
+
+# Update
+
+To update to a new version of the image,
+simply re-run the deploy command with the new image tag
+
+```sh
+dokku git:from-image $DOKKU_APP $CONTAINER
 ```
 
 # Modifications
