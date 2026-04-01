@@ -28,14 +28,23 @@ dokku domains:set $DOKKU_APP $APP_DOMAIN
 ## Configure certificate
 
 ```sh
-dokku ports:set $DOKKU_APP http:80:8080
+dokku ports:set $DOKKU_APP http:80:$APP_PORT
 dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
-# To avoid getting rate limited, use staging first
+dokku letsencrypt:enable $DOKKU_APP
+```
+
+If the first attempt fails, debug using the staging server
+to avoid getting rate limited.
+
+```sh
 dokku letsencrypt:set $DOKKU_APP server staging
 dokku letsencrypt:enable $DOKKU_APP
-# Switch to production
+```
+
+When that works, switch back to production, then re-enable.
+
+```sh
 dokku letsencrypt:set $DOKKU_APP server
-dokku letsencrypt:enable $DOKKU_APP
 ```
 
 ## Storage
@@ -64,6 +73,12 @@ dokku config:set $DOKKU_APP \
 
 ```sh
 dokku git:from-image $DOKKU_APP $CONTAINER
+```
+
+# Check
+
+```sh
+bin/check-url.exs --prefix "https://$APP_DOMAIN" --key "$IMGPROXY_KEY" --salt "$IMGPROXY_SALT" --path "/SOME%20IMAGE.jpg"
 ```
 
 # Run Locally
