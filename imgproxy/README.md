@@ -25,6 +25,19 @@ dokku apps:create $DOKKU_APP
 dokku domains:set $DOKKU_APP $APP_DOMAIN
 ```
 
+## Configure certificate
+
+```sh
+dokku ports:set $DOKKU_APP http:80:8080
+dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
+# To avoid getting rate limited, use staging first
+dokku letsencrypt:set $DOKKU_APP server staging
+dokku letsencrypt:enable $DOKKU_APP
+# Switch to production
+dokku letsencrypt:set $DOKKU_APP server
+dokku letsencrypt:enable $DOKKU_APP
+```
+
 ## Storage
 
 ```sh
@@ -45,19 +58,6 @@ If DOKKU_IMGPROXY_PATH_PREFIX is required
 ```sh
 dokku config:set $DOKKU_APP \
   IMGPROXY_PATH_PREFIX=$DOKKU_IMGPROXY_PATH_PREFIX \
-```
-
-## Configure certificate
-
-```sh
-dokku ports:set $DOKKU_APP http:80:8080
-dokku letsencrypt:set $DOKKU_APP email $DOMAIN_EMAIL
-# To avoid getting rate limited, use staging first
-dokku letsencrypt:set $DOKKU_APP server staging
-dokku letsencrypt:enable $DOKKU_APP
-# Switch to production
-dokku letsencrypt:set $DOKKU_APP server
-dokku letsencrypt:enable $DOKKU_APP
 ```
 
 ## Deploy
