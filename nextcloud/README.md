@@ -45,7 +45,7 @@ Create a use for the database and grant permissions:
 
 ```sh
 dokku postgres:enter $DOKKU_APP psql -U postgres
-postgres=# CREATE USER {{NAME}} WITH PASSWORD '{{PASSWORD}}';
+postgres=# CREATE USER {{NEXTCLOUD_POSTGRES_USER}} WITH PASSWORD '{{NEXTCLOUD_POSTGRES_PASSWORD}}';
 ```
 
 ## Redis
@@ -54,6 +54,34 @@ postgres=# CREATE USER {{NAME}} WITH PASSWORD '{{PASSWORD}}';
 dokku-root plugin:install https://github.com/dokku/dokku-redis.git redis
 dokku redis:create $DOKKU_APP
 dokku redis:link $DOKKU_APP $DOKKU_APP
+```
+
+## Secrets For `config.php`
+
+```sh
+bin/copy-service-settings
+```
+
+This parses the Postgres and Redis URIs and sets their hostname and passwords as environment
+variables for the app.
+
+As the database user is not the root user, that user/password combination needs to be set separately:
+
+```sh
+dokku config:set $DOKKU_APP --no-restart \
+  APP_DOMAIN=$APP_DOMAIN \
+  MAIL_FROM_ADDRESS=$MAIL_FROM_ADDRESS \
+  MAIL_DOMAIN=$MAIL_DOMAIN \
+  MAIL_SMTPSECURE=$MAIL_SMTPSECURE \
+  MAIL_SMTPAUTHTYPE=$MAIL_SMTPAUTHTYPE \
+  MAIL_SMTPHOST=$MAIL_SMTPHOST \
+  MAIL_SMTPPORT=$MAIL_SMTPPORT \
+  MAIL_SMTPNAME=$MAIL_SMTPNAME \
+  MAIL_SMTPPASSWORD=$MAIL_SMTPPASSWORD \
+  NEXTCLOUD_PASSWORD_SALT=$NEXTCLOUD_PASSWORD_SALT \
+  NEXTCLOUD_POSTGRES_USER=$NEXTCLOUD_POSTGRES_USER \
+  NEXTCLOUD_POSTGRES_PASSWORD=$NEXTCLOUD_POSTGRES_PASSWORD \
+  NEXTCLOUD_SECRET=$NEXTCLOUD_SECRET
 ```
 
 ## PHP and Nginx settings
