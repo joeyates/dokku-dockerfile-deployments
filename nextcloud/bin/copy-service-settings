@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+# This script copies the host and password settings from the DATABASE_URL and REDIS_URL environment variables
+# into separate environment variables (DB_HOSTNAME, DB_PASSWORD, REDIS_HOSTNAME, REDIS_PASSWORD)
+# and sets them as Dokku environment variables.
+
+set -E
+
+trap 'exit 1' ERR
+
+: ${DOKKU_APP:?Please set DOKKU_APP}
+: ${DOKKU_HOST:?Please set DOKKU_HOST}
+
+dokku() {
+  ssh -t dokku@$DOKKU_HOST "$@"
+}
+
+configuration_setting() {
+  local config=$1
+  local key=$2
+  local line=$(echo "$config" | grep -Po "(?<=^$key:).*")
+  if [[ "$line" == "" ]]; then
+    echo "Failed to find '$key' in configuration" >&2
+    exit 1
+  fi
+  echo $line
+}
+
+# Update a named associative array with the parsed values from an URL
+# URL parsing originally derived from https://stackoverflow.com/a/6174447/1385739
+parse_url() {
+  local config=$1
+  declare -n __target="$2"
+  local protocol="$(echo $config | grep -Po '^[a-z]+(?=://)')"
+  if [[ -z "$protocol" ]]; then
+    echo "Protocol not found in '$config'" >&2
+    exit 1
+  fi
+  __target["protocol"]="$protocol"
+
+  local after_proto=$(echo $config | sed -r s,^[a-z]+://,,g)
+
+  if [[ $(echo "$after_proto" | grep -P '.@') ]]; then
+    local userpassword="$(echo $after_proto | cut -d@ -f1)"
+    local hostportpath="$(echo $after_proto | cut -d@ -f2)"
+    local user="$(echo $userpassword | sed -r s,:.*,,g)"
+    __target["user"]="$user"
+    local password="$(echo $userpassword | sed -r s,[^:]*:,,g)"
+    __target["password"]="$password"
+  else
+    __target["user"]=""
+    __target["password"]=""
+    local hostportpath="$after_proto"
+  fi
+
+  __target["host"]="$(echo $hostportpath | sed -e 's,:.*,,g')"
+  __target["port"]="$(echo $hostportpath | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+
+  local path="$(echo $after_proto | grep -Po '/[\w/]*')"
+  __target["path"]=$path
+}
+
+# Fetch an environment variable from the supplied `dokku config:show` output, then parse it as a URL
+# and copy into the supplied associative array
+fetch_url() {
+  local config=$1
+  local variable=$2
+  declare -n __target="$3"
+  local URL=$(configuration_setting "$config" $variable)
+  if [[ -z "$URL" ]]; then
+    echo "$variable not set" >&2
+    exit 1
+  fi
+  declare -A url
+  parse_url "$URL" url
+  for key in ${!url[@]}
+  do
+    local value=${url[$key]}
+    __target[$key]=$value
+  done
+}
+
+CONFIG=$(dokku config:show $DOKKU_APP)
+
+declare -A redis_url
+fetch_url "$CONFIG" REDIS_URL redis_url
+if [[ -z "${redis_url["host"]}" ]]; then
+  echo "REDIS_URL does not contain a host name" >&2
+  exit 1
+fi
+if [[ -z "${redis_url["password"]}" ]]; then
+  echo "REDIS_URL does not contain a password" >&2
+  exit 1
+fi
+
+declare -A database_url
+fetch_url "$CONFIG" DATABASE_URL database_url
+if [[ -z "${database_url["host"]}" ]]; then
+  echo "DATABASE_URL does not contain a host name" >&2
+  exit 1
+fi
+if [[ -z "${database_url["password"]}" ]]; then
+  echo "DATABASE_URL does not contain a password" >&2
+  exit 1
+fi
+
+dokku config:set $DOKKU_APP \
+  DB_HOSTNAME=${database_url["host"]} \
+  DB_PASSWORD=${database_url["password"]} \
+  REDIS_HOSTNAME=${redis_url["host"]} \
+  REDIS_PASSWORD=${redis_url["password"]}
