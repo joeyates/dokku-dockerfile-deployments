@@ -17,46 +17,73 @@ defmodule CheckImgproxyUrl do
     path: %{type: :string, required: true},
     prefix: %{type: :string, required: true},
     key: %{type: :string},
-    salt: %{type: :string}
+    salt: %{type: :string},
+    width: %{type: :integer}
   ]
 
   def run(args) do
-    {:ok, path, options} = parse_args(args)
-    :ok = set_config(options)
-    url = build_url(path)
+    {:ok, options} = parse_args(args)
+    url = build_url(options)
     :ok = check_url(url)
   end
 
   def parse_args(args) do
     case HelpfulOptions.parse(args, switches: @options_switches) do
-      {:ok, parsed, []} ->
-        {path, options} = Map.pop(parsed, :path)
-        {:ok, path, options}
+      {:ok, options, []} ->
+        {:ok, options}
 
       {:error, reason} ->
         raise "Error: #{reason}"
     end
   end
 
-  def set_config(options) do
-    Application.put_env(:imgproxy, :prefix, options.prefix)
+  defp build_url(options) do
+    source_url = source_url(options.path)
 
-    if options[:key] && options[:salt] do
-      Application.put_env(:imgproxy, :key, options.key)
-      Application.put_env(:imgproxy, :salt, options.salt)
-    end
-  end
-
-  defp build_url(path) do
-    base = URI.new!("local://")
-    uri = %{base | path: path}
-
-    uri
-    |> to_string()
-    |> Imgproxy.new()
+    %Imgproxy{
+      source_url: source_url,
+      prefix: options.prefix
+    }
+    |> optionally_set_key(options[:key])
+    |> optionally_set_salt(options[:salt])
+    |> optionally_set_width(options[:width])
     |> Imgproxy.set_source_url_encoding(:plain)
     |> Imgproxy.to_string()
   end
+
+  defp optionally_set_key(img, nil) do
+    if System.get_env("IMGPROXY_KEY") do
+      %{img | key: System.get_env("IMGPROXY_KEY")}
+    else
+      img
+    end
+  end
+
+  defp optionally_set_key(img, key), do: %{img | key: key}
+
+  defp optionally_set_salt(img, nil) do
+    if System.get_env("IMGPROXY_SALT") do
+      %{img | salt: System.get_env("IMGPROXY_SALT")}
+    else
+      img
+    end
+  end
+
+  defp optionally_set_salt(img, salt), do: %{img | salt: salt}
+
+  defp optionally_set_width(img, nil), do: img
+
+  defp optionally_set_width(img, width) do
+    Imgproxy.resize(img, width, 0)
+  end
+
+  defp source_url("/" <> path) do
+    base = URI.new!("local://")
+    uri = %{base | path: "/#{path}"}
+    to_string(uri)
+  end
+
+  defp source_url(path), do: source_url("/#{path}")
 
   def check_url(url) do
     IO.puts("Checking URL: #{inspect(url)}")
